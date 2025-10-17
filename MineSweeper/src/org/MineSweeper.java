@@ -19,12 +19,12 @@ public class MineSweeper {
 	
 	
 	public int[][] getGameMap() {
-		for(int[] arr: this.gameMap) {
-			for(int i = 0; i < arr.length; i++) {
-				System.out.print(arr[i] + " ");
-			}
-			System.out.println();
-		}
+		//for(int[] arr: this.gameMap) {
+		//	for(int i = 0; i < arr.length; i++) {
+		//		System.out.print(arr[i] + " ");
+		//	}
+		//	System.out.println();
+		//}
 		return gameMap;
 	}
 

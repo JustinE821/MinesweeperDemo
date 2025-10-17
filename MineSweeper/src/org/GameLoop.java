@@ -45,25 +45,10 @@ public class GameLoop implements ActionListener{
 					
 					@Override
 					public void mouseReleased(MouseEvent e) {
-						// TODO Auto-generated method stub
-						
-					}
-					
-					@Override
-					public void mousePressed(MouseEvent e) {
-						System.out.println(e.getButton());
-						
-						if(e.getButton() == 3) {
-							if(button.getText() == "F") {
-								button.setText("");
-							} else {
-								button.setText("F");
-							}
-							
-						} else if(e.getButton() == 1) {
-							if(gameArr[row][column] == 1) {
+						if(e.getButton() == 1) {
+							if(gameArr[row][column] == 1 && button.getText() == "") {
 								frame.dispose();
-							} else {
+							} else if(gameArr[row][column] == 0 && button.getText() == ""){
 								int localBombs = 0;
 								for(int k = row -1; k < row + 2; k++) {
 									for(int m = column - 1; m < column + 2; m++) {
@@ -75,6 +60,21 @@ public class GameLoop implements ActionListener{
 								System.out.println("Num of bombs around this pos: " + localBombs);
 								button.setText(Integer.toString(localBombs));
 							}
+						}
+						
+					}
+					
+					@Override
+					public void mousePressed(MouseEvent e) {
+						System.out.println(e.getButton());
+						
+						if(e.getButton() == 3) {
+							if(button.getText() == "F") {
+								button.setText("");
+							} else if(button.getText().length() == 0) {
+								button.setText("F");
+							}
+							
 						}
 						
 						
