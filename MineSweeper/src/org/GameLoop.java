@@ -4,6 +4,8 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 
 import javax.swing.*;
 
@@ -39,23 +41,63 @@ public class GameLoop implements ActionListener{
 				
 				JButton button = new JButton();
 				button.setPreferredSize(new Dimension(25,25));
-				button.addActionListener(new ActionListener() {
+				button.addMouseListener(new MouseListener() {
 					
 					@Override
-					public void actionPerformed(ActionEvent e) {
-						if(gameArr[row][column] == 1) {
-							frame.dispose();
-						} else {
-							int localBombs = 0;
-							for(int k = row -1; k < row + 2; k++) {
-								for(int m = column - 1; m < column + 2; m++) {
-									if(m >= 0 && m < columns && k >= 0 && k < rows && gameArr[k][m] == 1) {
-										localBombs++;
+					public void mouseReleased(MouseEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void mousePressed(MouseEvent e) {
+						System.out.println(e.getButton());
+						
+						if(e.getButton() == 3) {
+							if(button.getText() == "F") {
+								button.setText("");
+							} else {
+								button.setText("F");
+							}
+							
+						} else if(e.getButton() == 1) {
+							if(gameArr[row][column] == 1) {
+								frame.dispose();
+							} else {
+								int localBombs = 0;
+								for(int k = row -1; k < row + 2; k++) {
+									for(int m = column - 1; m < column + 2; m++) {
+										if(m >= 0 && m < columns && k >= 0 && k < rows && gameArr[k][m] == 1) {
+											localBombs++;
+										}
 									}
 								}
+								System.out.println("Num of bombs around this pos: " + localBombs);
+								button.setText(Integer.toString(localBombs));
 							}
-							System.out.println("Num of bombs around this pos: " + localBombs);
 						}
+						
+						
+
+						
+						
+					}
+					
+					@Override
+					public void mouseExited(MouseEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void mouseEntered(MouseEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void mouseClicked(MouseEvent e) {
+						// TODO Auto-generated method stub
 						
 					}
 				});
