@@ -3,6 +3,7 @@ package org;
 import java.util.Arrays;
 import java.math.*;
 
+
 public class MineSweeper {
 	private int bombCount;
 	private int levelLen;
