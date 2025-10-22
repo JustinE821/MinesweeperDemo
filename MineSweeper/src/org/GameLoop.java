@@ -26,6 +26,33 @@ public class GameLoop extends JFrame implements ActionListener{
 	private JFrame frame;
 	private JPanel panel;
 	
+	JPanel pagePanel;
+	JPanel gameBorder;
+	
+	private JButton restartBtn;
+	private JLabel bombLabel;
+	
+	
+	Integer safeSpaces;
+	
+	int[][] gameArr;
+	MineSweeper gameField;
+	
+	private int rows;
+	private int columns;
+	private int bombCount;
+	
+	private int flagsLeft;
+	
+	private TimerTask task;
+	
+	String currDir = System.getProperty("user.dir");
+	private final String[] imgDirs = {currDir + "/src/org/images/zero.png", currDir + "/src/org/images/one.png", 
+			currDir + "/src/org/images/two.png", currDir + "/src/org/images/three.png", 
+			currDir + "/src/org/images/four.png", currDir + "/src/org/images/five.png", 
+			currDir + "/src/org/images/six.png", currDir + "/src/org/images/seven.png", 
+			currDir + "/src/org/images/eight.png"};
+	
 	//private frameWidth = frame.get
 	
 	JLabel timeLabel = new JLabel();
@@ -34,6 +61,16 @@ public class GameLoop extends JFrame implements ActionListener{
 	private long elapsedSeconds;
 	
 	public GameLoop() {
+		rows = 16;
+		columns = 30;
+		bombCount = 99;
+		frame = new JFrame();
+		
+		createWindow();
+		checkWindow();
+		
+		
+
 		initializeGame();
 	}
 	
@@ -41,14 +78,210 @@ public class GameLoop extends JFrame implements ActionListener{
 	
 	
 	private void initializeGame() {
-		frame = new JFrame();
+		
+
+		
+		trackTime();
+
+		gameField = new MineSweeper(99, 30, 16);
+		gameArr = gameField.getGameMap();
 		
 		
+		elapsedSeconds = 0;
+		flagsLeft = bombCount;
+		timeLabel.setText(String.valueOf(elapsedSeconds));
+		bombLabel.setText(String.valueOf(bombCount));
+
+		
+
+		
+		safeSpaces = columns * rows - bombCount;
+		
+		//frame.setPreferredSize(new Dimension(1000, 1000));
+		GridLayout grid = new GridLayout(rows, columns, 0, 0);
+		panel = new JPanel(grid);
+		
+		for(int i = 0; i < rows; i++) {
+			for(int j = 0; j < columns; j++) {
+				
+				int row = i;
+				int column = j;
+				
+				String imgDir = currDir + "/src/org/images/tile.png";
+				ImageIcon image = new ImageIcon(imgDir);
+				JLabel label = new JLabel();
+
+				label.setPreferredSize(new Dimension(45,45));
+				label.setHorizontalAlignment(SwingConstants.LEFT);
+				Image img = image.getImage().getScaledInstance(45, 45, Image.SCALE_DEFAULT);
+				label.setIcon(new ImageIcon(img));
+				label.setBackground(Color.WHITE);
+				
+				//frame.addPropertyChangeListener(new PropertyChangeListener() {
+					
+				//	@Override
+				//	public void propertyChange(PropertyChangeEvent evt) {
+						
+				//		System.out.println(evt.getPropertyName());
+						
+				//	}
+				//});
+				
+				
+				mouseListener(label, row, column);
+				
+
+				
+				panel.add(label);
+			}
+
+		}
+		
+		gameBorder = new JPanel();
+		gameBorder.setLayout(new FlowLayout());
+		gameBorder.add(panel);
+		
+		pagePanel.add(gameBorder);
 		
 		
-		//BoxLayout hLayout = new BoxLayout(frame);
-		//hLayout.
+		frame.add(pagePanel);
 		
+		
+
+	}
+
+	//private JButton createButton() {
+	//	
+	//	JButton button = new JButton();
+	//	
+	//	return button;
+	//}
+	
+	
+	@Override
+	public void actionPerformed(ActionEvent e) {
+
+		
+	}
+	
+	
+	public void trackTime() {
+		
+		if(this.task != null) {
+			task.cancel();
+		}
+		
+		
+		task = new TimerTask() {
+			
+			@Override
+			public void run() {
+				if(timeLabel.getText() == "-1") {
+					timer.cancel();;
+				}
+				
+				timeLabel.setText(Long.toString(elapsedSeconds++));
+				System.out.println(elapsedSeconds);
+
+				
+			}
+		};
+		
+		timer.scheduleAtFixedRate(task, 1000, 1000);
+	}
+	
+	public void paint(Graphics g, Image img) {
+		super.paint(g);
+		
+		g.drawImage(img, 0, 0, this);
+	}
+	
+	
+	public void mouseListener(JLabel label, int row, int column) {
+		label.addMouseListener(new MouseListener() {
+			
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				if(e.getButton() == 1) {
+					if(gameArr[row][column] == 1 && label.getBackground() == Color.WHITE) {
+						timeLabel.setText("-1");
+						frame.dispose();
+					} else if(gameArr[row][column] == 0 && label.getBackground() == Color.WHITE){
+						int localBombs = 0;
+						for(int k = row -1; k < row + 2; k++) {
+							for(int m = column - 1; m < column + 2; m++) {
+								if(m >= 0 && m < columns && k >= 0 && k < rows && gameArr[k][m] == 1) {
+									localBombs++;
+								}
+							}
+						}
+						//System.out.println("Num of bombs around this pos: " + localBombs);
+						
+						String tempS = imgDirs[localBombs];
+						Image tempImg = new ImageIcon(tempS).getImage().getScaledInstance(45, 45, Image.SCALE_AREA_AVERAGING);
+						label.setBackground(Color.GRAY);
+						label.setIcon(new ImageIcon(tempImg));
+						safeSpaces--;
+						if(safeSpaces == 0) {
+							restartBtn.setText(":)");
+						}
+						
+					}
+				}
+				
+			}
+			
+			@Override
+			public void mousePressed(MouseEvent e) {
+				//System.out.println(e.getButton());
+				
+				if(e.getButton() == 3) {
+					//System.out.println(label.getBackground());
+					if(label.getBackground() == Color.WHITE) {
+						String tempS = currDir + "/src/org/images/flag.png";
+						Image tempImg = new ImageIcon(tempS).getImage().getScaledInstance(45, 45, Image.SCALE_DEFAULT);
+						label.setBackground(Color.BLACK);
+						label.setIcon(new ImageIcon(tempImg));
+						bombLabel.setText(Integer.toString(--flagsLeft));
+					
+					} else if (label.getBackground() == Color.BLACK){
+						String tempS = currDir + "/src/org/images/tile.png";
+						Image tempImg = new ImageIcon(tempS).getImage().getScaledInstance(45, 45, Image.SCALE_DEFAULT);
+						label.setBackground(Color.WHITE);
+						label.setIcon(new ImageIcon(tempImg));
+						bombLabel.setText(Integer.toString(++flagsLeft));
+					}
+					
+				}
+				
+				
+
+				
+				
+			}
+			
+			@Override
+			public void mouseExited(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+	}
+	
+	
+	private void checkWindow() {
 		frame.addWindowListener(new WindowListener() {
 			
 			@Override
@@ -93,29 +326,32 @@ public class GameLoop extends JFrame implements ActionListener{
 				
 			}
 		});
+	}
+	
+	private void createWindow() {
+		frame.setTitle("MineSweeper Demo");
+		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		frame.setSize(800, 500);
+		frame.setLocationRelativeTo(null);
 		
+		restartBtn = new JButton();
 		
-		JButton restartBtn = new JButton();
-		
-		restartBtn.setText(":)");
+		restartBtn.setText(">:)");
 		restartBtn.setMaximumSize(new Dimension(25,25));
 		
+		pagePanel = new JPanel();
+		//pagePanel.setLayout(new GridBagLayout());
+		pagePanel.setLayout(new BoxLayout(pagePanel, BoxLayout.Y_AXIS));
 		
-		JLabel bombLabel = new JLabel();
 		
-		bombLabel.setText("99");
+		bombLabel = new JLabel();
+		
+		bombLabel.setText(String.valueOf(bombCount));
 		bombLabel.setMaximumSize(new Dimension(25,25));
 		
 
 		timeLabel.setText("0");
 		timeLabel.setMaximumSize(new Dimension(25,25));
-
-		trackTime();
-
-		
-		JPanel pagePanel = new JPanel();
-		//pagePanel.setLayout(new GridBagLayout());
-		pagePanel.setLayout(new BoxLayout(pagePanel, BoxLayout.Y_AXIS));
 		
 
 		
@@ -146,210 +382,60 @@ public class GameLoop extends JFrame implements ActionListener{
 		JPanel outerHeaderBox = new JPanel();
 		outerHeaderBox.setLayout(new FlowLayout());
 		outerHeaderBox.add(headerBox);
-
-		
-		//headerBox.
 		
 		pagePanel.add(headerBox);
 		
 		
-		
-		
-		frame.setTitle("MineSweeper Demo");
-		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		frame.setSize(800, 500);
-		frame.setLocationRelativeTo(null);
-		String currDir = System.getProperty("user.dir");
-		//File file = new File(System.getProperty("user.dir") + "/src/org/images/tile.png");
-		//System.out.println(System.getProperty("user.dir"));
-		int rows = 16;
-		int columns = 30;
-		int bombCount = 99;
-		MineSweeper gameField = new MineSweeper(99, 30, 16);
-		
-		//frame.setPreferredSize(new Dimension(1000, 1000));
-		GridLayout grid = new GridLayout(rows, columns, 0, 0);
-		panel = new JPanel(grid);
-		//panel.setPreferredSize(new Dimension(1000,1000));
-		int[][] gameArr = gameField.getGameMap();
-		for(int i = 0; i < rows; i++) {
-			for(int j = 0; j < columns; j++) {
-				
-				int row = i;
-				int column = j;
-				
-				JButton button = new JButton();
-				
-				String[] imgDirs = {currDir + "/src/org/images/zero.png", currDir + "/src/org/images/one.png", 
-						currDir + "/src/org/images/two.png", currDir + "/src/org/images/three.png", 
-						currDir + "/src/org/images/four.png", currDir + "/src/org/images/five.png", 
-						currDir + "/src/org/images/six.png", currDir + "/src/org/images/seven.png", 
-						currDir + "/src/org/images/eight.png"};
-				
-				String imgDir = currDir + "/src/org/images/tile.png";
-				ImageIcon image = new ImageIcon(imgDir);
-				JLabel label = new JLabel();
+		restartBtn.addMouseListener(new MouseListener() {
+			
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				if (e.getButton() == 1) {
+					System.out.println("test");
+					
+					//resets timer for each game
+					pagePanel.remove(gameBorder);;
 
-				label.setPreferredSize(new Dimension(45,45));
-				label.setHorizontalAlignment(SwingConstants.LEFT);
-				Image img = image.getImage().getScaledInstance(45, 45, Image.SCALE_DEFAULT);
-				label.setIcon(new ImageIcon(img));
-				label.setBackground(Color.WHITE);
+					initializeGame();
+				}
 				
-				frame.addPropertyChangeListener(new PropertyChangeListener() {
-					
-					@Override
-					public void propertyChange(PropertyChangeEvent evt) {
-						
-						System.out.println(evt.getPropertyName());
-						
-					}
-				});
-				
-				
-				
-				
-				label.addMouseListener(new MouseListener() {
-					
-					@Override
-					public void mouseReleased(MouseEvent e) {
-						if(e.getButton() == 1) {
-							if(gameArr[row][column] == 1 && label.getBackground() == Color.WHITE) {
-								timeLabel.setText("-1");
-								frame.dispose();
-							} else if(gameArr[row][column] == 0 && label.getBackground() == Color.WHITE){
-								int localBombs = 0;
-								for(int k = row -1; k < row + 2; k++) {
-									for(int m = column - 1; m < column + 2; m++) {
-										if(m >= 0 && m < columns && k >= 0 && k < rows && gameArr[k][m] == 1) {
-											localBombs++;
-										}
-									}
-								}
-								//System.out.println("Num of bombs around this pos: " + localBombs);
-								
-								String tempS = imgDirs[localBombs];
-								Image tempImg = new ImageIcon(tempS).getImage().getScaledInstance(45, 45, Image.SCALE_AREA_AVERAGING);
-								label.setBackground(Color.GRAY);
-								label.setIcon(new ImageIcon(tempImg));
-							}
-						}
-						
-					}
-					
-					@Override
-					public void mousePressed(MouseEvent e) {
-						//System.out.println(e.getButton());
-						
-						if(e.getButton() == 3) {
-							//System.out.println(label.getBackground());
-							if(label.getBackground() == Color.WHITE) {
-								String tempS = currDir + "/src/org/images/flag.png";
-								Image tempImg = new ImageIcon(tempS).getImage().getScaledInstance(45, 45, Image.SCALE_DEFAULT);
-								label.setBackground(Color.BLACK);
-								label.setIcon(new ImageIcon(tempImg));
-								int bombData = Integer.parseInt(bombLabel.getText()) - 1;//bombLabel.getText();
-								bombLabel.setText(Integer.toString(bombData));
-							
-							} else if (label.getBackground() == Color.BLACK){
-								String tempS = currDir + "/src/org/images/tile.png";
-								Image tempImg = new ImageIcon(tempS).getImage().getScaledInstance(45, 45, Image.SCALE_DEFAULT);
-								label.setBackground(Color.WHITE);
-								label.setIcon(new ImageIcon(tempImg));
-								int bombData = Integer.parseInt(bombLabel.getText()) + 1;//bombLabel.getText();
-								bombLabel.setText(Integer.toString(bombData));
-							}
-							
-						}
-						
-						
-
-						
-						
-					}
-					
-					@Override
-					public void mouseExited(MouseEvent e) {
-						// TODO Auto-generated method stub
-						
-					}
-					
-					@Override
-					public void mouseEntered(MouseEvent e) {
-						// TODO Auto-generated method stub
-						
-					}
-					
-					@Override
-					public void mouseClicked(MouseEvent e) {
-						// TODO Auto-generated method stub
-						
-					}
-				});
-				
-				panel.add(label);
 			}
+			
+			@Override
+			public void mousePressed(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mouseExited(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+		
 
-		}
-		
-		JPanel gameBorder = new JPanel();
-		gameBorder.setLayout(new FlowLayout());
-		gameBorder.add(panel);
-		
-		pagePanel.add(gameBorder);
-		
-		
-		frame.add(pagePanel);
-		
-		
+
 		frame.pack();
 		frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 		frame.setVisible(true);
-	}
-
-	//private JButton createButton() {
-	//	
-	//	JButton button = new JButton();
-	//	
-	//	return button;
-	//}
-	
-	
-	@Override
-	public void actionPerformed(ActionEvent e) {
-
+		
+		
 		
 	}
-	
-	
-	public void trackTime() {
-		
-		
-		TimerTask task = new TimerTask() {
-			
-			@Override
-			public void run() {
-				if(timeLabel.getText() == "-1") {
-					timer.cancel();;
-				}
-				
-				timeLabel.setText(Long.toString(elapsedSeconds++));
-				System.out.println(elapsedSeconds);
-
-				
-			}
-		};
-		
-		timer.scheduleAtFixedRate(task, 1000, 1000);
-	}
-	
-	public void paint(Graphics g, Image img) {
-		super.paint(g);
-		
-		g.drawImage(img, 0, 0, this);
-	}
-	
-	
 	
 	
 }
