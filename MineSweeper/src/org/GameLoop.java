@@ -51,11 +51,11 @@ public class GameLoop extends JFrame implements ActionListener{
 	private TimerTask task;
 	
 	String currDir = System.getProperty("user.dir");
-	private final String[] imgDirs = {currDir + "/src/org/images/zero.png", currDir + "/src/org/images/one.png", 
-			currDir + "/src/org/images/two.png", currDir + "/src/org/images/three.png", 
-			currDir + "/src/org/images/four.png", currDir + "/src/org/images/five.png", 
-			currDir + "/src/org/images/six.png", currDir + "/src/org/images/seven.png", 
-			currDir + "/src/org/images/eight.png", currDir + "/src/org/images/explodedBomb.png", currDir + "/src/org/images/bomb.png"};
+	private final String[] imgDirs = {"/org/images/zero.png", "/org/images/one.png", 
+			"/org/images/two.png", "/org/images/three.png", 
+			"/org/images/four.png", "/org/images/five.png", 
+			"/org/images/six.png", "/org/images/seven.png", 
+			"/org/images/eight.png", "/org/images/explodedBomb.png", "/org/images/bomb.png"};
 	
 	//private frameWidth = frame.get
 	
@@ -106,35 +106,6 @@ public class GameLoop extends JFrame implements ActionListener{
 		GridLayout grid = new GridLayout(rows, columns, 0, 0);
 		panel = new JPanel(grid);
 		
-//		for(int index = 0; index < rows * columns; index) {
-//			String imgDir = currDir + "/src/org/images/tile.png";
-//			ImageIcon image = new ImageIcon(imgDir);
-//			JLabel label = new JLabel();
-//
-//			label.setPreferredSize(new Dimension(45,45));
-//			label.setHorizontalAlignment(SwingConstants.LEFT);
-//			Image img = image.getImage().getScaledInstance(45, 45, Image.SCALE_DEFAULT);
-//			label.setIcon(new ImageIcon(img));
-//			label.setBackground(Color.WHITE);
-//			
-//			//frame.addPropertyChangeListener(new PropertyChangeListener() {
-//				
-//			//	@Override
-//			//	public void propertyChange(PropertyChangeEvent evt) {
-//					
-//			//		System.out.println(evt.getPropertyName());
-//					
-//			//	}
-//			//});
-//			
-//			
-//			mouseListener(label, index);
-//			
-//
-//			
-//			panel.add(label);
-//		}
-		
 		int index = 0;
 		for(int i = 0; i < rows; i++) {
 			for(int j = 0; j < columns; j++) {
@@ -143,7 +114,9 @@ public class GameLoop extends JFrame implements ActionListener{
 				int column = j;
 				
 				String imgDir = currDir + "/src/org/images/tile.png";
-				ImageIcon image = new ImageIcon(imgDir);
+				//ImageIcon image = new ImageIcon(imgDir);
+				ImageIcon image = new ImageIcon(getClass().getResource("/org/images/tile.png"));
+				
 				JLabel label = new JLabel();
 
 				label.setPreferredSize(new Dimension(45,45));
@@ -237,8 +210,8 @@ public class GameLoop extends JFrame implements ActionListener{
 					if(gameArr[row][column] == 1 && label.getBackground() == Color.WHITE) {
 						
 						//Displays exploded bomb
-						String tempS = imgDirs[9];
-						Image tempImg = new ImageIcon(tempS).getImage().getScaledInstance(45, 45, Image.SCALE_AREA_AVERAGING);
+						ImageIcon tempImage = new ImageIcon(getClass().getResource(imgDirs[9]));
+						Image tempImg = tempImage.getImage().getScaledInstance(45, 45, Image.SCALE_AREA_AVERAGING);
 						label.setBackground(Color.RED);
 						task.cancel();
 						label.setIcon(new ImageIcon(tempImg));
@@ -255,8 +228,8 @@ public class GameLoop extends JFrame implements ActionListener{
 							}
 						}
 						
-						String tempS = imgDirs[localBombs];
-						Image tempImg = new ImageIcon(tempS).getImage().getScaledInstance(45, 45, Image.SCALE_AREA_AVERAGING);
+						ImageIcon tempImage = new ImageIcon(getClass().getResource(imgDirs[localBombs]));
+						Image tempImg = tempImage.getImage().getScaledInstance(45, 45, Image.SCALE_AREA_AVERAGING);
 						label.setBackground(Color.GRAY);
 						label.setIcon(new ImageIcon(tempImg));
 						safeSpaces--;
@@ -351,15 +324,15 @@ public class GameLoop extends JFrame implements ActionListener{
 				if(e.getButton() == 3) {
 					//System.out.println(label.getBackground());
 					if(label.getBackground() == Color.WHITE) {
-						String tempS = currDir + "/src/org/images/flag.png";
-						Image tempImg = new ImageIcon(tempS).getImage().getScaledInstance(45, 45, Image.SCALE_DEFAULT);
+						ImageIcon tempImage = new ImageIcon(getClass().getResource("/org/images/flag.png"));
+						Image tempImg = tempImage.getImage().getScaledInstance(45, 45, Image.SCALE_DEFAULT);
 						label.setBackground(Color.BLACK);
 						label.setIcon(new ImageIcon(tempImg));
 						bombLabel.setText(Integer.toString(--flagsLeft));
 					
 					} else if (label.getBackground() == Color.BLACK){
-						String tempS = currDir + "/src/org/images/tile.png";
-						Image tempImg = new ImageIcon(tempS).getImage().getScaledInstance(45, 45, Image.SCALE_DEFAULT);
+						ImageIcon tempImage = new ImageIcon(getClass().getResource("/org/images/tile.png"));
+						Image tempImg = tempImage.getImage().getScaledInstance(45, 45, Image.SCALE_DEFAULT);
 						label.setBackground(Color.WHITE);
 						label.setIcon(new ImageIcon(tempImg));
 						bombLabel.setText(Integer.toString(++flagsLeft));
