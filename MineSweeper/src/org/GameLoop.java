@@ -17,6 +17,8 @@ import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import java.util.HashMap;
+
 import java.awt.*;
 
 import javax.swing.*;
@@ -42,6 +44,8 @@ public class GameLoop extends JFrame implements ActionListener{
 	private int columns;
 	private int bombCount;
 	
+	private HashMap<Integer, JLabel> tileMap;
+	
 	private int flagsLeft;
 	
 	private TimerTask task;
@@ -51,7 +55,7 @@ public class GameLoop extends JFrame implements ActionListener{
 			currDir + "/src/org/images/two.png", currDir + "/src/org/images/three.png", 
 			currDir + "/src/org/images/four.png", currDir + "/src/org/images/five.png", 
 			currDir + "/src/org/images/six.png", currDir + "/src/org/images/seven.png", 
-			currDir + "/src/org/images/eight.png"};
+			currDir + "/src/org/images/eight.png", currDir + "/src/org/images/explodedBomb.png", currDir + "/src/org/images/bomb.png"};
 	
 	//private frameWidth = frame.get
 	
@@ -65,6 +69,7 @@ public class GameLoop extends JFrame implements ActionListener{
 		columns = 30;
 		bombCount = 99;
 		frame = new JFrame();
+		tileMap = new HashMap<Integer, JLabel>();
 		
 		createWindow();
 		checkWindow();
@@ -101,6 +106,36 @@ public class GameLoop extends JFrame implements ActionListener{
 		GridLayout grid = new GridLayout(rows, columns, 0, 0);
 		panel = new JPanel(grid);
 		
+//		for(int index = 0; index < rows * columns; index) {
+//			String imgDir = currDir + "/src/org/images/tile.png";
+//			ImageIcon image = new ImageIcon(imgDir);
+//			JLabel label = new JLabel();
+//
+//			label.setPreferredSize(new Dimension(45,45));
+//			label.setHorizontalAlignment(SwingConstants.LEFT);
+//			Image img = image.getImage().getScaledInstance(45, 45, Image.SCALE_DEFAULT);
+//			label.setIcon(new ImageIcon(img));
+//			label.setBackground(Color.WHITE);
+//			
+//			//frame.addPropertyChangeListener(new PropertyChangeListener() {
+//				
+//			//	@Override
+//			//	public void propertyChange(PropertyChangeEvent evt) {
+//					
+//			//		System.out.println(evt.getPropertyName());
+//					
+//			//	}
+//			//});
+//			
+//			
+//			mouseListener(label, index);
+//			
+//
+//			
+//			panel.add(label);
+//		}
+		
+		int index = 0;
 		for(int i = 0; i < rows; i++) {
 			for(int j = 0; j < columns; j++) {
 				
@@ -127,12 +162,13 @@ public class GameLoop extends JFrame implements ActionListener{
 				//	}
 				//});
 				
-				
-				mouseListener(label, row, column);
+				tileMap.put((Integer)index, (JLabel)label);
+				mouseListener(label, row, column, index);
 				
 
 				
 				panel.add(label);
+				++index;
 			}
 
 		}
@@ -149,14 +185,6 @@ public class GameLoop extends JFrame implements ActionListener{
 		
 
 	}
-
-	//private JButton createButton() {
-	//	
-	//	JButton button = new JButton();
-	//	
-	//	return button;
-	//}
-	
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
@@ -177,7 +205,7 @@ public class GameLoop extends JFrame implements ActionListener{
 			@Override
 			public void run() {
 				if(timeLabel.getText() == "-1") {
-					timer.cancel();;
+					task.cancel();
 				}
 				
 				timeLabel.setText(Long.toString(elapsedSeconds++));
@@ -197,17 +225,28 @@ public class GameLoop extends JFrame implements ActionListener{
 	}
 	
 	
-	public void mouseListener(JLabel label, int row, int column) {
+	public void mouseListener(JLabel label, int row, int column, int index) {
 		label.addMouseListener(new MouseListener() {
 			
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				if(e.getButton() == 1) {
+					
+					int localBombs = 0;
+					//if this condition is true, the player clicked a bomb
 					if(gameArr[row][column] == 1 && label.getBackground() == Color.WHITE) {
-						timeLabel.setText("-1");
-						frame.dispose();
+						
+						//Displays exploded bomb
+						String tempS = imgDirs[9];
+						Image tempImg = new ImageIcon(tempS).getImage().getScaledInstance(45, 45, Image.SCALE_AREA_AVERAGING);
+						label.setBackground(Color.RED);
+						task.cancel();
+						label.setIcon(new ImageIcon(tempImg));
+						disableTiles();
+						
+					//if this condition is met, the player did not click a bomb
 					} else if(gameArr[row][column] == 0 && label.getBackground() == Color.WHITE){
-						int localBombs = 0;
+						
 						for(int k = row -1; k < row + 2; k++) {
 							for(int m = column - 1; m < column + 2; m++) {
 								if(m >= 0 && m < columns && k >= 0 && k < rows && gameArr[k][m] == 1) {
@@ -215,7 +254,6 @@ public class GameLoop extends JFrame implements ActionListener{
 								}
 							}
 						}
-						//System.out.println("Num of bombs around this pos: " + localBombs);
 						
 						String tempS = imgDirs[localBombs];
 						Image tempImg = new ImageIcon(tempS).getImage().getScaledInstance(45, 45, Image.SCALE_AREA_AVERAGING);
@@ -224,6 +262,81 @@ public class GameLoop extends JFrame implements ActionListener{
 						safeSpaces--;
 						if(safeSpaces == 0) {
 							restartBtn.setText(":)");
+						}
+						
+						//Code below allows safe areas to automatically be clicked
+						if(localBombs == 0) {
+							for(int k = index - columns; k < index + columns * 2;) {
+								for(int m = -1; m < 2; m++) {
+									
+									if((k + m) % columns == 0 && index % columns == columns - 1 || (k + m) % columns == columns - 1 && index % columns == 0) {
+										
+									} else if(tileMap.containsKey(k + m)) {
+										JLabel adjacentTile = tileMap.get(k + m);
+										MouseListener tileListener = adjacentTile.getMouseListeners()[0];
+										tileListener.mouseReleased(e);
+									}
+								}
+								k += columns;
+							}
+							
+							//System.out.println(tem + " " + e);
+							
+							//for(int k = index + columns;) {
+								
+								
+							//}
+						}
+						
+					} else if(gameArr[row][column] == 0 && label.getBackground() == Color.GRAY) {
+						
+						int pinnedBombs = 0;
+						
+						
+						for(int k = row -1; k < row + 2; k++) {
+							for(int m = column - 1; m < column + 2; m++) {
+								if(m >= 0 && m < columns && k >= 0 && k < rows && gameArr[k][m] == 1) {
+									localBombs++;
+								}
+							}
+						}
+						
+						
+						
+						
+						for(int k = index - columns; k < index + columns * 2;) {
+							for(int m = -1; m < 2; m++) {
+								
+								if((k + m) % columns == 0 && index % columns == columns - 1 || (k + m) % columns == columns - 1 && index % columns == 0) {
+									
+								} else if(tileMap.containsKey(k + m)) {
+									JLabel adjacentTile = tileMap.get(k + m);
+									if(adjacentTile.getBackground() == Color.BLACK) {
+										pinnedBombs++;
+									}
+									
+
+									//MouseListener tileListener = adjacentTile.getMouseListeners()[0];
+									//tileListener.mouseReleased(e);
+								}
+							}
+							k += columns;
+						}
+						
+						if(localBombs == pinnedBombs && localBombs > 0) {
+							for(int k = index - columns; k < index + columns * 2;) {
+								for(int m = -1; m < 2; m++) {
+									JLabel adjacentTile = tileMap.get(k + m);
+									if((k + m) % columns == 0 && index % columns == columns - 1 || (k + m) % columns == columns - 1 && index % columns == 0) {
+										
+									} else if(tileMap.containsKey(k + m) && adjacentTile.getBackground() == Color.WHITE) {
+										
+										MouseListener tileListener = adjacentTile.getMouseListeners()[0];
+										tileListener.mouseReleased(e);
+									}
+								}
+								k += columns;
+							}
 						}
 						
 					}
@@ -310,7 +423,11 @@ public class GameLoop extends JFrame implements ActionListener{
 			
 			@Override
 			public void windowClosing(WindowEvent e) {
-				timer.cancel();
+				
+				if(task != null) {
+					timer.cancel();
+				}
+				
 				
 			}
 			
@@ -394,7 +511,8 @@ public class GameLoop extends JFrame implements ActionListener{
 					System.out.println("test");
 					
 					//resets timer for each game
-					pagePanel.remove(gameBorder);;
+					pagePanel.remove(gameBorder);
+					tileMap.clear();
 
 					initializeGame();
 				}
@@ -435,6 +553,14 @@ public class GameLoop extends JFrame implements ActionListener{
 		
 		
 		
+	}
+	
+	private void disableTiles() {
+		tileMap.values();
+		for(JLabel tile: tileMap.values()) {
+			MouseListener tileListener = tile.getMouseListeners()[0];
+			tile.removeMouseListener(tileListener);
+		}
 	}
 	
 	
